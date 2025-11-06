@@ -1,5 +1,7 @@
 use std::process;
 
+pub const builtin_commands: [&str; 3] = ["exit", "echo", "type"];
+
 #[derive(Debug)]
 pub struct Command {
     program: String,   // The name of the command/program
@@ -19,7 +21,8 @@ impl Command {
     pub fn execute(&self) {
         match self.program.as_str() {
             "exit" => handle_exit(&self.args),
-            "echo" => handle_ecoh(&self.args),
+            "echo" => handle_echo(&self.args),
+            "type"=> handle_type(&self.args),
             _ => {
                 println!("{}: command not found", self.program);
             }
@@ -33,7 +36,14 @@ fn handle_exit(args: &Vec<String>) {
     }
     process::exit(1);
 }
-fn handle_ecoh(args: &Vec<String>) {
+fn handle_echo(args: &Vec<String>) {
     let output = args.join(" ");
     println!("{}", output);
+}
+fn handle_type(args: &Vec<String>) {
+    if builtin_commands.contains(&args[0].as_str()) {
+        println!("{} is a shell builtin", &args[0].as_str());
+    } else {
+        println!("{}: not found", &args[0].as_str());
+    }
 }
