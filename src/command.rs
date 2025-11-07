@@ -20,27 +20,31 @@ impl From<&str> for Command {
 impl Command {
     pub fn execute(&self) {
         match self.program.as_str() {
-            "exit" => handle_exit(&self.args),
-            "echo" => handle_echo(&self.args),
-            "type"=> handle_type(&self.args),
+            "exit" => run_exit(&self.args),
+            "echo" => run_echo(&self.args),
+            "type" => run_type(&self.args),
             _ => {
-                println!("{}: command not found", self.program);
+                if is_external_program(&self.program) {
+                    run_external_programs(&self.program, &self.args);
+                } else {
+                    println!("{}: command not found", self.program);
+                }
             }
         }
     }
 }
-fn handle_exit(args: &Vec<String>) {
+fn run_exit(args: &Vec<String>) {
     let exit_code_str = &args[0];
     if let Ok(exit_code) = exit_code_str.parse::<i32>() {
         process::exit(exit_code);
     }
     process::exit(1);
 }
-fn handle_echo(args: &Vec<String>) {
+fn run_echo(args: &Vec<String>) {
     let output = args.join(" ");
     println!("{}", output);
 }
-fn handle_type(args: &Vec<String>) {
+fn run_type(args: &Vec<String>) {
     let program = &args[0].as_str();
     if builtin_commands.contains(program) {
         println!("{} is a shell builtin", program);
@@ -50,6 +54,19 @@ fn handle_type(args: &Vec<String>) {
             Some(path) => println!("{} is {}", program, path),
             None => println!("{}: not found", program),
         }
+    }
+}
+fn run_external_programs(program: &str, args: &Vec<String>) {
+    match search_in_path(program) {
+        Some(path) => {
+            let mut child = process::Command::new(path)
+                .arg(program)
+                .args(args)
+                .spawn()
+                .expect("failed to execute process");
+            child.wait().expect("failed to wait on child");
+        }
+        None => println!("{}: command not found", program),
     }
 }
 fn search_in_path(program: &str) -> Option<String> {
@@ -64,6 +81,12 @@ fn search_in_path(program: &str) -> Option<String> {
         }
     }
     None
+}
+fn is_external_program(program: &str) -> bool {
+    match search_in_path(program) {
+        Some(_) => true,
+        None => false,
+    }
 }
 fn is_executable(path: &str) -> bool {
     #[cfg(unix)]
