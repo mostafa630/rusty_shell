@@ -1,7 +1,7 @@
 use std::os::unix::process::CommandExt;
 use std::process; // <-- needed
 
-pub const builtin_commands: [&str; 4] = ["exit", "echo", "type", "pwd"];
+pub const builtin_commands: [&str; 5] = ["exit", "echo", "type", "pwd", "cd"];
 
 #[derive(Debug)]
 pub struct Command {
@@ -25,6 +25,7 @@ impl Command {
             "echo" => run_echo(&self.args),
             "type" => run_type(&self.args),
             "pwd" => run_pwd(),
+            "cd" => run_cd(&self.args),
             _ => {
                 if is_external_program(&self.program) {
                     run_external_programs(&self.program, &self.args);
@@ -64,6 +65,17 @@ fn run_pwd() {
         Err(e) => println!("Error getting current directory: {}", e),
     }
 }
+fn run_cd(args: &Vec<String>) {
+    let target_dir = if args.is_empty() {
+        std::env::var("HOME").unwrap_or_else(|_| "/".to_string())
+    } else {
+        args[0].clone()
+    };
+    if let Err(e) = std::env::set_current_dir(&target_dir) {
+        println!("cd: {}: {}", target_dir, "No such file or directory");
+    }
+}
+
 fn run_external_programs(program: &str, args: &Vec<String>) {
     match search_in_path(program) {
         Some(path) => {
