@@ -66,7 +66,7 @@ fn run_pwd() {
     }
 }
 fn run_cd(args: &Vec<String>) {
-    let target_dir = if args.is_empty() {
+    let target_dir = if args.is_empty() || args[0] == "~" {
         std::env::var("HOME").unwrap_or_else(|_| "/".to_string())
     } else {
         args[0].clone()
