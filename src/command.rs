@@ -1,7 +1,7 @@
-use std::process;
-use std::os::unix::process::CommandExt; // <-- needed
+use std::os::unix::process::CommandExt;
+use std::process; // <-- needed
 
-pub const builtin_commands: [&str; 3] = ["exit", "echo", "type"];
+pub const builtin_commands: [&str; 4] = ["exit", "echo", "type", "pwd"];
 
 #[derive(Debug)]
 pub struct Command {
@@ -24,6 +24,7 @@ impl Command {
             "exit" => run_exit(&self.args),
             "echo" => run_echo(&self.args),
             "type" => run_type(&self.args),
+            "pwd" => run_pwd(),
             _ => {
                 if is_external_program(&self.program) {
                     run_external_programs(&self.program, &self.args);
@@ -55,6 +56,12 @@ fn run_type(args: &Vec<String>) {
             Some(path) => println!("{} is {}", program, path),
             None => println!("{}: not found", program),
         }
+    }
+}
+fn run_pwd() {
+    match std::env::current_dir() {
+        Ok(path) => println!("{}", path.display()),
+        Err(e) => println!("Error getting current directory: {}", e),
     }
 }
 fn run_external_programs(program: &str, args: &Vec<String>) {
