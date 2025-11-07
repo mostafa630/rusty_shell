@@ -41,9 +41,36 @@ fn handle_echo(args: &Vec<String>) {
     println!("{}", output);
 }
 fn handle_type(args: &Vec<String>) {
-    if builtin_commands.contains(&args[0].as_str()) {
-        println!("{} is a shell builtin", &args[0].as_str());
+    let program = &args[0].as_str();
+    if builtin_commands.contains(program) {
+        println!("{} is a shell builtin", program);
+        return;
     } else {
-        println!("{}: not found", &args[0].as_str());
+        match search_in_path(program) {
+            Some(path) => println!("{} is {}", program, path),
+            None => println!("{}: not found", program),
+        }
+    }
+}
+fn search_in_path(program: &str) -> Option<String> {
+    // Get the PATH environment variable
+    let env_path = std::env::var("PATH").unwrap_or_default();
+    let directories = env_path.split(':').collect::<Vec<&str>>();
+    for dir in directories {
+        let full_path = format!("{}/{}", dir, program);
+        // file exists and is executable
+        if std::path::Path::new(&full_path).exists() && is_executable(&full_path) {
+            return Some(full_path);
+        }
+    }
+    None
+}
+fn is_executable(path: &str) -> bool {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let metadata = std::fs::metadata(path).ok().unwrap();
+        let permissions = metadata.permissions();
+        return permissions.mode() & 0o111 != 0; // Check if any execute bit is set
     }
 }
