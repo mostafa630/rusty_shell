@@ -17,7 +17,8 @@ impl From<&str> for Command {
         let mut in_single_quotes = false;
         let mut in_double_quotes = false;
 
-        for c in value.chars() {
+        let mut chars = value.chars().peekable();
+        while let Some(c) = chars.next() {
             match c {
                 '\'' if !in_double_quotes => {
                     in_single_quotes = !in_single_quotes;
@@ -34,6 +35,13 @@ impl From<&str> for Command {
                     }
                     continue;
                 }
+                '\\' if !in_single_quotes => {
+                // Take next char literally if exists
+                if let Some(next) = chars.next() {
+                    current.push(next);
+                }
+                continue;
+             }
                 _ => {}
             }
             current.push(c);
