@@ -36,7 +36,12 @@ impl From<&str> for Command {
                 }
                 _ => {}
             }
-            current.push(c);
+            if(!in_single_quotes && !in_double_quotes) && c == '\\' {
+               current.push_str(" ");
+            }
+            else{
+                current.push(c);
+            }
         }
         if !current.is_empty() {
             parts.push(current);
