@@ -10,34 +10,45 @@ pub struct Command {
 }
 
 impl From<&str> for Command {
-    // support single quotes in arguments
+    // support single quotes and double quotes in arguments
     fn from(value: &str) -> Self {
-        let mut parts = Vec::new();
-        let mut current_part = String::new();
+        let mut parts = vec![];
+        let mut current = String::new();
         let mut in_single_quotes = false;
+        let mut in_double_quotes = false;
 
         for c in value.chars() {
             match c {
-                '\'' => {
+                '\'' if !in_double_quotes => {
                     in_single_quotes = !in_single_quotes;
+                    continue;
                 }
-                ' ' if !in_single_quotes => {
-                    if !current_part.is_empty() {
-                        parts.push(current_part.clone());
-                        current_part.clear();
+                '"' if !in_single_quotes => {
+                    in_double_quotes = !in_double_quotes;
+                    continue;
+                }
+                ' ' if !in_single_quotes && !in_double_quotes => {
+                    if !current.is_empty() {
+                        parts.push(current.clone());
+                        current.clear();
                     }
+                    continue;
                 }
-                _ => {
-                    current_part.push(c);
-                }
+                _ => {}
             }
+            current.push(c);
         }
-        if !current_part.is_empty() {
-            parts.push(current_part);
+        if !current.is_empty() {
+            parts.push(current);
         }
 
-        let program = parts.get(0).unwrap_or(&"".to_string()).to_string();
-        let args: Vec<String> = parts.iter().skip(1).cloned().collect();
+        let program = parts.get(0).cloned().unwrap_or_default();
+        let args = if parts.len() > 1 {
+            parts[1..].to_vec()
+        } else {
+            vec![]
+        };
+
         Command { program, args }
     }
 }
