@@ -10,10 +10,34 @@ pub struct Command {
 }
 
 impl From<&str> for Command {
+    // support single quotes in arguments
     fn from(value: &str) -> Self {
-        let mut parts = value.split_whitespace();
-        let program = parts.next().unwrap_or("").to_string();
-        let args: Vec<String> = parts.map(|s| s.to_string()).collect();
+        let mut parts = Vec::new();
+        let mut current_part = String::new();
+        let mut in_single_quotes = false;
+       
+        for c in value.chars() {
+            match c {
+                '\'' => {
+                    in_single_quotes = !in_single_quotes;
+                }
+                ' ' if !in_single_quotes => {
+                    if !current_part.is_empty() {
+                        parts.push(current_part.clone());
+                        current_part.clear();
+                    }
+                }
+                _ => {
+                    current_part.push(c);
+                }
+            }
+        }
+        if !current_part.is_empty() {
+            parts.push(current_part);
+        }
+
+        let program = parts.get(0).unwrap_or(&"".to_string()).to_string();
+        let args: Vec<String> = parts.iter().skip(1).cloned().collect();
         Command { program, args }
     }
 }
