@@ -35,7 +35,8 @@ impl From<&str> for Command {
                     }
                     continue;
                 }
-                '\\' if !in_single_quotes && !in_double_quotes => {
+                
+                '\\' if !in_single_quotes || in_double_quotes => {
                 // Take next char literally if exists
                 if let Some(next) = chars.next() {
                     current.push(next);
