@@ -35,13 +35,26 @@ impl From<&str> for Command {
                     }
                     continue;
                 }
+
                 '\\' if !in_single_quotes && !in_double_quotes => {
-                // Take next char literally if exists
-                if let Some(next) = chars.next() {
-                    current.push(next);
+                    // Take next char literally if exists
+                    if let Some(next) = chars.next() {
+                        current.push(next);
+                    }
+                    continue;
                 }
-                continue;
-             }
+                '\\' if in_double_quotes => {
+                    // In double quotes, only certain characters can be escaped
+                    if let Some(&next) = chars.peek() {
+                        if next == '"' || next == '\\' || next == '$' || next == '`' {
+                            chars.next(); // consume the next character
+                            current.push(next);
+                            continue;
+                        }
+                    }
+                    current.push(c); // treat backslash literally
+                    continue;
+                }
                 _ => {}
             }
             current.push(c);
