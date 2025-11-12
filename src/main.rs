@@ -2,7 +2,10 @@
 use std::io::{self, Write};
 
 mod command;
+mod tokenizer;
 use command::Command;
+
+use crate::tokenizer::Tokenizer;
 fn main() {
     while true {
         print!("$ ");
@@ -12,6 +15,8 @@ fn main() {
             .read_line(&mut command)
             .expect("failed to take input");
 
+        let tokens = Tokenizer::tokenize(&command.trim());
+        println!("{:?}" , tokens);
         let command: Command = command.trim().into();
         command.execute();
     }

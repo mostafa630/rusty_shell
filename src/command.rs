@@ -1,12 +1,21 @@
 use std::os::unix::process::CommandExt;
-use std::process; // <-- needed
+use std::process;
 
+use crate::tokenizer::Token; // <-- needed
 pub const builtin_commands: [&str; 5] = ["exit", "echo", "type", "pwd", "cd"];
 
 #[derive(Debug)]
 pub struct Command {
     program: String,   // The name of the command/program
     args: Vec<String>, // The arguments passed to that program
+}
+pub struct Pipeline {
+    pub commands: Vec<Command>,
+}
+pub enum Redirection {
+    Input(String),          // < file
+    OutputTruncate(String), // > file   (remove existing content and add new content)
+    OutputAppend(String),   // >> file  (append new content to existing content)
 }
 
 impl From<&str> for Command {
