@@ -2,37 +2,29 @@
 use std::io::{self, Write};
 
 mod command;
+mod executor;
+mod parser;
 mod tokenizer;
 use command::Command;
 
+use crate::executor::Executor;
+use crate::parser::Parser;
 use crate::tokenizer::Tokenizer;
 fn main() {
     while true {
         print!("$ ");
         io::stdout().flush().unwrap();
-        let mut command = String::new();
+        let mut input_line = String::new();
         io::stdin()
-            .read_line(&mut command)
+            .read_line(&mut input_line)
             .expect("failed to take input");
 
-        let tokens = Tokenizer::tokenize(&command.trim());
-        println!("{:?}" , tokens);
-        let command: Command = command.trim().into();
-        command.execute();
+        let tokens = Tokenizer::tokenize(&input_line.trim());
+        let parsed_line = Parser::parse(tokens);
+        Executor::execute(parsed_line);
     }
 }
 
-///////////////////////// code to take it as refrence /////////////////////////
-// Represents a parsed command (no piping)
-// pub struct Command {
-//     pub program: String,
-//     pub args: Vec<String>,
-// }
-
-// // Represents a full shell line which may contain pipes
-// pub struct Pipeline {
-//     pub commands: Vec<Command>,  // e.g. ["ls -l", "grep txt"]
-// }
 
 // // Execution environment (shell state)
 // pub struct Shell {
@@ -40,35 +32,6 @@ fn main() {
 //     pub last_status: i32,
 // }
 
-// // How the command should run
-// pub enum ExecMode {
-//     Foreground,
-//     Background, // with '&'
-// }
-
-// // Where to redirect input/output
-// pub enum Redirection {
-//     Input(String),           // < file
-//     OutputTruncate(String),  // > file
-//     OutputAppend(String),    // >> file
-// }
-
-// // Token types used during parsing
-// pub enum Token {
-//     Word(String),
-//     Pipe,      // |
-//     Ampersand, // &
-//     RedirectIn,      // <
-//     RedirectOut,     // >
-//     RedirectAppend,  // >>
-// }
-// // Result of parsing a single line
-// pub struct ParsedLine {
-//     pub pipeline: Pipeline,
-//     pub mode: ExecMode,
-//     pub redirections: Vec<Redirection>,
-// }
-// These give you:
 
 // Tokenizer → produces Vec<Token>
 

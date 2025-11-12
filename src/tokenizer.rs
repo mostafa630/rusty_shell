@@ -11,7 +11,7 @@ pub enum Token {
 pub struct Tokenizer;
 
 impl Tokenizer {
-    pub fn tokenize(input: &str)-> Vec<Token> {
+    pub fn tokenize(input: &str) -> Vec<Token> {
         let mut tokens = Vec::new();
         let mut current = String::new();
         let mut in_single_quotes = false;

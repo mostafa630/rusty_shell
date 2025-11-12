@@ -1,86 +1,19 @@
 use std::os::unix::process::CommandExt;
 use std::process;
 
-use crate::tokenizer::Token; // <-- needed
 pub const builtin_commands: [&str; 5] = ["exit", "echo", "type", "pwd", "cd"];
 
 #[derive(Debug)]
-pub struct Command {
-    program: String,   // The name of the command/program
-    args: Vec<String>, // The arguments passed to that program
-}
-pub struct Pipeline {
-    pub commands: Vec<Command>,
-}
 pub enum Redirection {
     Input(String),          // < file
     OutputTruncate(String), // > file   (remove existing content and add new content)
     OutputAppend(String),   // >> file  (append new content to existing content)
 }
-
-impl From<&str> for Command {
-    // support single quotes and double quotes in arguments
-    fn from(value: &str) -> Self {
-        let mut parts = vec![];
-        let mut current = String::new();
-        let mut in_single_quotes = false;
-        let mut in_double_quotes = false;
-
-        let mut chars = value.chars().peekable();
-        while let Some(c) = chars.next() {
-            match c {
-                '\'' if !in_double_quotes => {
-                    in_single_quotes = !in_single_quotes;
-                    continue;
-                }
-                '"' if !in_single_quotes => {
-                    in_double_quotes = !in_double_quotes;
-                    continue;
-                }
-                ' ' if !in_single_quotes && !in_double_quotes => {
-                    if !current.is_empty() {
-                        parts.push(current.clone());
-                        current.clear();
-                    }
-                    continue;
-                }
-
-                '\\' if !in_single_quotes && !in_double_quotes => {
-                    // Take next char literally if exists
-                    if let Some(next) = chars.next() {
-                        current.push(next);
-                    }
-                    continue;
-                }
-                '\\' if in_double_quotes => {
-                    // In double quotes, only certain characters can be escaped
-                    if let Some(&next) = chars.peek() {
-                        if next == '"' || next == '\\' || next == '$' || next == '`' {
-                            chars.next(); // consume the next character
-                            current.push(next);
-                            continue;
-                        }
-                    }
-                    current.push(c); // treat backslash literally
-                    continue;
-                }
-                _ => {}
-            }
-            current.push(c);
-        }
-        if !current.is_empty() {
-            parts.push(current);
-        }
-
-        let program = parts.get(0).cloned().unwrap_or_default();
-        let args = if parts.len() > 1 {
-            parts[1..].to_vec()
-        } else {
-            vec![]
-        };
-
-        Command { program, args }
-    }
+#[derive(Debug)]
+pub struct Command {
+    pub program: String,   // The name of the command/program
+    pub args: Vec<String>, // The arguments passed to that program
+    pub redirections: Vec<Redirection>,
 }
 
 impl Command {
