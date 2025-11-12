@@ -21,6 +21,7 @@ fn main() {
 
         let tokens = Tokenizer::tokenize(&input_line.trim());
         let parsed_line = Parser::parse(tokens);
+        println!("{:?}" ,parsed_line);
         Executor::execute(parsed_line);
     }
 }

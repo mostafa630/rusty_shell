@@ -7,7 +7,7 @@ pub enum Token {
     RedirectOut,    // >
     RedirectAppend, // >>
 }
-
+                                                                              
 pub struct Tokenizer;
 
 impl Tokenizer {

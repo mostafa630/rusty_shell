@@ -25,7 +25,7 @@ impl Parser {
         let mut commands = Vec::new();
         let mut args = Vec::new();
         let mut program = None;
-        let mut redirections = Vec::new();
+        let mut redirection = None;
         let mut exec_mode = ExecMode::Foreground;
 
         let mut iter = tokens.into_iter().peekable();
@@ -40,17 +40,17 @@ impl Parser {
                 }
                 Token::RedirectIn => {
                     if let Some(Token::Word(file)) = iter.next() {
-                        redirections.push(Redirection::Input(file));
+                        redirection = Some(Redirection::Input(file));
                     }
                 }
                 Token::RedirectOut => {
                     if let Some(Token::Word(file)) = iter.next() {
-                        redirections.push(Redirection::OutputTruncate(file));
+                        redirection = Some(Redirection::OutputTruncate(file));
                     }
                 }
                 Token::RedirectAppend => {
                     if let Some(Token::Word(file)) = iter.next() {
-                        redirections.push(Redirection::OutputAppend(file));
+                        redirection  = Some(Redirection::OutputAppend(file));
                     }
                 }
                 Token::Pipe => {
@@ -59,10 +59,9 @@ impl Parser {
                         commands.push(Command {
                             program: _program,
                             args: args,
-                            redirections,
+                            redirection : redirection.take(),
                         });
                         args = Vec::new();
-                        redirections = Vec::new();
                     }
                 }
                 Token::Ampersand => {
@@ -75,7 +74,7 @@ impl Parser {
             commands.push(Command {
                 program: _program,
                 args,
-                redirections,
+                redirection: redirection.take(),
             });
         }
         ParsedLine {

@@ -13,14 +13,14 @@ pub enum Redirection {
 pub struct Command {
     pub program: String,   // The name of the command/program
     pub args: Vec<String>, // The arguments passed to that program
-    pub redirections: Vec<Redirection>,
+    pub redirection: Option<Redirection>,
 }
 
 impl Command {
     pub fn execute(&self) {
         match self.program.as_str() {
             "exit" => run_exit(&self.args),
-            "echo" => run_echo(&self.args),
+            "echo" => run_echo(&self.args , &self.redirection),
             "type" => run_type(&self.args),
             "pwd" => run_pwd(),
             "cd" => run_cd(&self.args),
@@ -41,7 +41,7 @@ fn run_exit(args: &Vec<String>) {
     }
     process::exit(1);
 }
-fn run_echo(args: &Vec<String>) {
+fn run_echo(args: &Vec<String> ,redirection : &Option<Redirection>) {
     let output = args.join(" ");
     println!("{}", output);
 }
