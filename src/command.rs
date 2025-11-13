@@ -1,4 +1,7 @@
+use std::fs::{self, File};
+use std::io::Write;
 use std::os::unix::process::CommandExt;
+use std::path::Path;
 use std::process;
 
 pub const builtin_commands: [&str; 5] = ["exit", "echo", "type", "pwd", "cd"];
@@ -20,9 +23,9 @@ impl Command {
     pub fn execute(&self) {
         match self.program.as_str() {
             "exit" => run_exit(&self.args),
-            "echo" => run_echo(&self.args , &self.redirection),
-            "type" => run_type(&self.args),
-            "pwd" => run_pwd(),
+            "echo" => run_echo(&self.args, &self.redirection),
+            "type" => run_type(&self.args,&self.redirection),
+            "pwd" => run_pwd(&self.redirection),
             "cd" => run_cd(&self.args),
             _ => {
                 if is_external_program(&self.program) {
@@ -41,26 +44,48 @@ fn run_exit(args: &Vec<String>) {
     }
     process::exit(1);
 }
-fn run_echo(args: &Vec<String> ,redirection : &Option<Redirection>) {
+fn run_echo(args: &Vec<String>, redirection: &Option<Redirection>) {
     let output = args.join(" ");
-    println!("{}", output);
-}
-fn run_type(args: &Vec<String>) {
-    let program = &args[0].as_str();
-    if builtin_commands.contains(program) {
-        println!("{} is a shell builtin", program);
-        return;
-    } else {
-        match search_in_path(program) {
-            Some(path) => println!("{} is {}", program, path),
-            None => println!("{}: not found", program),
+    match redirection {
+        Some(file) => redirect(file, &output),
+        None => {
+            println!("{}", output)
         }
     }
 }
-fn run_pwd() {
-    match std::env::current_dir() {
-        Ok(path) => println!("{}", path.display()),
-        Err(e) => println!("Error getting current directory: {}", e),
+fn run_type(args: &Vec<String> , redirection: &Option<Redirection>) {
+    let program = &args[0].as_str();
+    let program_type = get_type(program);
+     match redirection {
+        Some(file) => redirect(file, &program_type),
+        None => {
+            println!("{}", program_type)
+        }
+    }
+}
+fn get_type(program : &str)-> String {
+    if builtin_commands.contains(&program) {
+        return "{program} is a shell builtin".to_string();
+    } else {
+        match search_in_path(program) {
+            Some(path) => format!("{} is {}", program, path),
+            None => format!("{}: not found", program),
+        }
+    }
+}
+fn run_pwd(redirection: &Option<Redirection>) {
+   let pwd = get_pwd();
+   match redirection {
+        Some(file) => redirect(file, &pwd),
+        None => {
+            println!("{}", pwd)
+        }
+    }
+}
+fn get_pwd()->String {
+     match std::env::current_dir(){
+        Ok(path) => format!("{}", path.display()),
+        Err(e) => format!("Error getting current directory: {}", e),
     }
 }
 fn run_cd(args: &Vec<String>) {
@@ -113,5 +138,34 @@ fn is_executable(path: &str) -> bool {
         let metadata = std::fs::metadata(path).ok().unwrap();
         let permissions = metadata.permissions();
         return permissions.mode() & 0o111 != 0; // Check if any execute bit is set
+    }
+}
+fn redirect(redirection: &Redirection, output: &String) {
+    match redirection {
+        Redirection::OutputTruncate(file) => output_truncate_redirection(&file, output),
+        _ => panic!("to do"),
+    }
+}
+fn output_truncate_redirection(file: &String, output: &String) {
+     let path = Path::new(file);
+
+    // Ensure parent directories exist
+    if let Some(parent) = path.parent() {
+        if !parent.exists() {
+            if let Err(e) = fs::create_dir_all(parent) {
+                eprintln!("echo: cannot create directory {}: {}", parent.display(), e);
+                return;
+            }
+        }
+    }
+
+    // This will create a new file or truncate the existing one
+    match File::create(path) {
+        Ok(mut f) => {
+            if let Err(e) = writeln!(f, "{}", output) {
+                eprintln!("echo: cannot write to {}: {}", file, e);
+            }
+        }
+        Err(e) => eprintln!("echo: cannot create {}: {}", file, e),
     }
 }

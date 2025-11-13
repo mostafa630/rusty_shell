@@ -7,7 +7,7 @@ pub enum Token {
     RedirectOut,    // >
     RedirectAppend, // >>
 }
-                                                                              
+
 pub struct Tokenizer;
 
 impl Tokenizer {
@@ -34,6 +34,16 @@ impl Tokenizer {
                         current.clear();
                     }
                     continue;
+                }
+                '1' => {
+                    if let Some(&'>') = chars.peek() {
+                        chars.next();
+                        tokens.push(Token::RedirectOut);
+                    }
+                    else{
+                        current.push(c)
+                    }
+                    continue;   
                 }
                 '>' if !in_single_quotes && !in_double_quotes => {
                     if !current.is_empty() {
