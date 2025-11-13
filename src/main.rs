@@ -21,18 +21,16 @@ fn main() {
 
         let tokens = Tokenizer::tokenize(&input_line.trim());
         let parsed_line = Parser::parse(tokens);
-        println!("{:?}" ,parsed_line);
+        //println!("{:?}", parsed_line);
         Executor::execute(parsed_line);
     }
 }
-
 
 // // Execution environment (shell state)
 // pub struct Shell {
 //     pub current_dir: std::path::PathBuf,
 //     pub last_status: i32,
 // }
-
 
 // Tokenizer → produces Vec<Token>
 
