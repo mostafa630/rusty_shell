@@ -7,7 +7,7 @@ pub enum Token {
     RedirectOut,    // >
     RedirectAppend, // >>
 }
-                                                                              
+
 pub struct Tokenizer;
 
 impl Tokenizer {
@@ -32,6 +32,15 @@ impl Tokenizer {
                     if !current.is_empty() {
                         tokens.push(Token::Word(current.clone()));
                         current.clear();
+                    }
+                    continue;
+                }
+                '1' => {
+                    if let Some(&'>') = chars.peek() {
+                        chars.next();
+                        tokens.push(Token::RedirectOut);
+                    } else {
+                        current.push(c)
                     }
                     continue;
                 }
