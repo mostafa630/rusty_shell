@@ -1,4 +1,4 @@
-use crate::command::{Command, Redirection};
+use crate::command::{Command, RedirectCode, Redirection};
 use crate::tokenizer::Token;
 
 #[derive(Debug)]
@@ -45,7 +45,12 @@ impl Parser {
                 }
                 Token::RedirectOut => {
                     if let Some(Token::Word(file)) = iter.next() {
-                        redirection = Some(Redirection::OutputTruncate(file));
+                        redirection = Some(Redirection::OutputTruncate(RedirectCode::One(file)));
+                    }
+                }
+                Token::RedirectErrOut => {
+                    if let Some(Token::Word(file)) = iter.next() {
+                        redirection = Some(Redirection::OutputTruncate(RedirectCode::Two(file)));
                     }
                 }
                 Token::RedirectAppend => {
