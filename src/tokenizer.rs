@@ -4,7 +4,8 @@ pub enum Token {
     Pipe,           // |
     Ampersand,      // &
     RedirectIn,     // <
-    RedirectOut,    // >
+    RedirectOut,    // > or 1>
+    RedirectErrOut,    // 2>
     RedirectAppend, // >>
 }
 
@@ -35,7 +36,7 @@ impl Tokenizer {
                     }
                     continue;
                 }
-                '1' => {
+                '1'=> {
                     if let Some(&'>') = chars.peek() {
                         chars.next();
                         tokens.push(Token::RedirectOut);
@@ -44,6 +45,16 @@ impl Tokenizer {
                     }
                     continue;
                 }
+                '2'=> {
+                    if let Some(&'>') = chars.peek() {
+                        chars.next();
+                        tokens.push(Token::RedirectErrOut);
+                    } else {
+                        current.push(c)
+                    }
+                    continue;
+                }
+
                 '>' if !in_single_quotes && !in_double_quotes => {
                     if !current.is_empty() {
                         tokens.push(Token::Word(current.clone()));
