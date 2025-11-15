@@ -50,7 +50,7 @@ impl Parser {
                 }
                 Token::RedirectAppend => {
                     if let Some(Token::Word(file)) = iter.next() {
-                        redirection  = Some(Redirection::OutputAppend(file));
+                        redirection = Some(Redirection::OutputAppend(file));
                     }
                 }
                 Token::Pipe => {
@@ -59,7 +59,7 @@ impl Parser {
                         commands.push(Command {
                             program: _program,
                             args: args,
-                            redirection : redirection.take(),
+                            redirection: redirection.take(),
                         });
                         args = Vec::new();
                     }
