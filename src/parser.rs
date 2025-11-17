@@ -23,8 +23,8 @@ pub struct Parser;
 impl Parser {
     pub fn parse(tokens: Vec<Token>) -> ParsedLine {
         let mut commands = Vec::new();
-        let mut args = Vec::new();
         let mut program = None;
+        let mut args = Vec::new();
         let mut redirection = None;
         let mut exec_mode = ExecMode::Foreground;
 
@@ -55,7 +55,12 @@ impl Parser {
                 }
                 Token::RedirectAppend => {
                     if let Some(Token::Word(file)) = iter.next() {
-                        redirection = Some(Redirection::OutputAppend(file));
+                        redirection = Some(Redirection::OutputAppend(RedirectCode::One(file)));
+                    }
+                }
+                Token::RedirectErrAppend => {
+                    if let Some(Token::Word(file)) = iter.next() {
+                        redirection = Some(Redirection::OutputAppend(RedirectCode::Two(file)));
                     }
                 }
                 Token::Pipe => {

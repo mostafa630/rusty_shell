@@ -23,7 +23,7 @@ pub enum RedirectCode {
 pub enum Redirection {
     Input(String),                // < file
     OutputTruncate(RedirectCode), // > file   (remove existing content and add new content)
-    OutputAppend(String),         // >> file  (append new content to existing content)
+    OutputAppend(RedirectCode),   // >> file  (append new content to existing content)
 }
 #[derive(Debug)]
 pub struct Command {
