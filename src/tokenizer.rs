@@ -1,12 +1,13 @@
 #[derive(Debug)]
 pub enum Token {
     Word(String),
-    Pipe,           // |
-    Ampersand,      // &
-    RedirectIn,     // <
-    RedirectOut,    // > or 1>
-    RedirectErrOut, // 2>
-    RedirectAppend, // >>
+    Pipe,              // |
+    Ampersand,         // &
+    RedirectIn,        // <
+    RedirectOut,       // > or 1>
+    RedirectErrOut,    // 2>
+    RedirectAppend,    // >> or 1>>
+    RedirectErrAppend, // 2>>
 }
 
 pub struct Tokenizer;
@@ -39,7 +40,12 @@ impl Tokenizer {
                 '1' => {
                     if let Some(&'>') = chars.peek() {
                         chars.next();
-                        tokens.push(Token::RedirectOut);
+                        if let Some(&'>') = chars.peek() {
+                            tokens.push(Token::RedirectAppend);
+                            chars.next();
+                        } else {
+                            tokens.push(Token::RedirectOut);
+                        }
                     } else {
                         current.push(c)
                     }
@@ -48,7 +54,12 @@ impl Tokenizer {
                 '2' => {
                     if let Some(&'>') = chars.peek() {
                         chars.next();
-                        tokens.push(Token::RedirectErrOut);
+                        if let Some(&'>') = chars.peek() {
+                            tokens.push(Token::RedirectErrAppend);
+                            chars.next();
+                        } else {
+                            tokens.push(Token::RedirectErrOut);
+                        }
                     } else {
                         current.push(c)
                     }

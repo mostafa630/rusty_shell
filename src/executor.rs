@@ -37,6 +37,41 @@ impl Executor {
                     print!("{}", content);
                 }
             }
+            Some(Redirection::OutputAppend(RedirectCode::One(file))) => {
+                use std::io::Write;
+
+                let mut f = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(&file)
+                    .expect("can't open file for append");
+
+                if let Some(content) = output.success {
+                    f.write_all(content.as_bytes())
+                        .expect("failed to append to file");
+                }
+                if let Some(err) = output.error {
+                    eprint!("{}", err);
+                }
+            }
+
+            Some(Redirection::OutputAppend(RedirectCode::Two(file))) => {
+                use std::io::Write;
+
+                let mut f = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(&file)
+                    .expect("can't open file for append");
+
+                if let Some(err) = output.error {
+                    f.write_all(err.as_bytes())
+                        .expect("failed to append error to file");
+                }
+                if let Some(content) = output.success {
+                    print!("{}", content);
+                }
+            }
             None => {
                 // no redirection: print both
                 if let Some(content) = output.success {
