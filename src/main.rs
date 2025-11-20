@@ -1,28 +1,53 @@
 #[allow(unused_imports)]
 use std::io::{self, Write};
+use rustyline::Editor;
+use rustyline::error::ReadlineError;
 
-mod command;
-mod executor;
-mod parser;
-mod tokenizer;
-use command::Command;
+use rusty_shell::auto_complete::AutoCompleter;
+use rusty_shell::executor::Executor;
+use rusty_shell::parser::Parser;
+use rusty_shell::tokenizer::Tokenizer;
+use rustyline::history::DefaultHistory;
 
-use crate::executor::Executor;
-use crate::parser::Parser;
-use crate::tokenizer::Tokenizer;
+// 
 fn main() {
-    while true {
-        print!("$ ");
-        io::stdout().flush().unwrap();
-        let mut input_line = String::new();
-        io::stdin()
-            .read_line(&mut input_line)
-            .expect("failed to take input");
+    // Create rustyline editor with our completer
+    let mut rl= Editor::<AutoCompleter ,DefaultHistory>::new().unwrap();
+    rl.set_helper(Some(AutoCompleter::new()));
 
-        let tokens = Tokenizer::tokenize(&input_line.trim());
-        let parsed_line = Parser::parse(tokens);
-        //println!("{:?}", parsed_line);
-        Executor::execute(parsed_line);
+    loop {
+        // Read input line with prompt
+        let readline = rl.readline("$");
+        match readline {
+            Ok(input_line) => {
+                let input_line = input_line.trim();
+                if input_line.is_empty() {
+                    continue;
+                }
+
+                // Add to history so you can navigate with up/down arrows
+                rl.add_history_entry(input_line);
+
+                // Tokenize, parse, and execute using your existing shell logic
+                let tokens = Tokenizer::tokenize(input_line);
+                let parsed_line = Parser::parse(tokens);
+
+                // Execute your command
+                Executor::execute(parsed_line);
+            }
+            Err(ReadlineError::Interrupted) => {
+                println!("CTRL-C");
+                break;
+            }
+            Err(ReadlineError::Eof) => {
+                println!("CTRL-D");
+                break;
+            }
+            Err(err) => {
+                println!("Error: {:?}", err);
+                break;
+            }
+        }
     }
 }
 
