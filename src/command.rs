@@ -5,7 +5,7 @@ use std::os::unix::process::CommandExt;
 use std::path::Path;
 use std::process;
 
-pub const builtin_commands: [&str; 5] = ["exit", "echo", "type", "pwd", "cd"];
+pub const builtin_commands: [&str; 6] = ["exit", "echo", "type", "pwd", "cd","clear"];
 
 #[derive(Debug)]
 pub struct CommandOutput {
@@ -40,8 +40,10 @@ impl Command {
             "type" => run_type(&self.args),
             "pwd" => run_pwd(),
             "cd" => run_cd(&self.args),
+            "clear" =>run_clear(),
             _ => {
                 if is_external_program(&self.program) {
+                    println!("here");
                     run_external_programs(&self.program, &self.args)
                 } else {
                     CommandOutput {
@@ -189,4 +191,13 @@ fn needs_newline(output: &str) -> bool {
     output
         .chars()
         .any(|c| !c.is_control() && !c.is_whitespace())
+}
+
+fn run_clear() -> CommandOutput {
+    print!("\x1B[2J\x1B[1;1H"); // ANSI escape code to clear terminal
+    std::io::stdout().flush().unwrap();
+    CommandOutput {
+        success: None,
+        error: None,
+    }
 }

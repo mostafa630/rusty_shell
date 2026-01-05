@@ -33,6 +33,7 @@ fn main() {
 
                 // Add to history so you can navigate with up/down arrows
                 rl.add_history_entry(input_line);
+                println!("input = {}" , input_line);
 
                 // Tokenize, parse, and execute using your existing shell logic
                 let tokens = Tokenizer::tokenize(input_line);
