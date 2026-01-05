@@ -1,35 +1,173 @@
-[![progress-banner](https://backend.codecrafters.io/progress/shell/8a423518-91a5-4a52-8668-867d679b861a)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
+# Rust Shell Implementation
 
-This is a starting point for Rust solutions to the
-["Build Your Own Shell" Challenge](https://app.codecrafters.io/courses/shell/overview).
+A POSIX-compliant shell implementation built in Rust as part of the CodeCrafters "Build Your Own Shell" challenge. This shell supports command parsing, execution, I/O redirection, pipelines, and interactive features like auto-completion and command history.
 
-In this challenge, you'll build your own POSIX compliant shell that's capable of
-interpreting shell commands, running external programs and builtin commands like
-cd, pwd, echo and more. Along the way, you'll learn about shell command parsing,
-REPLs, builtin commands, and more.
+## Features
 
-**Note**: If you're viewing this repo on GitHub, head over to
-[codecrafters.io](https://codecrafters.io) to try the challenge.
+### Core Shell Functionality
+- **Interactive REPL** with readline support
+- **Command parsing** with proper tokenization
+- **Built-in commands**: `exit`, `echo`, `type`, `pwd`, `cd`, `clear`
+- **External program execution** with PATH resolution
+- **Background process execution** using `&`
+- **Auto-completion** for commands
+- **Command history** with arrow key navigation
 
-# Passing the first stage
+### I/O Redirection Support
+- **Input redirection**: `command < file`
+- **Output redirection**: `command > file` (truncate)
+- **Output append**: `command >> file`
+- **Error redirection**: `command 2> file`
+- **Error append**: `command 2>> file`
 
-The entry point for your `shell` implementation is in `src/main.rs`. Study and
-uncomment the relevant code, and push your changes to pass the first stage:
+### Advanced Features
+- **Pipeline support**: `command1 | command2`
+- **Quote handling**: Single and double quotes with escape sequences
+- **Background execution**: `command &`
+- **Proper error handling** and exit codes
 
-```sh
-git commit -am "pass 1st stage" # any msg
-git push origin master
+## Project Structure
+
+```
+src/
+├── main.rs           # Entry point and REPL loop
+├── lib.rs            # Module declarations
+├── tokenizer.rs      # Lexical analysis and tokenization
+├── parser.rs         # Command parsing and AST generation
+├── executor.rs       # Command execution and I/O handling
+├── command.rs        # Built-in and external command implementations
+└── auto_complete.rs  # Tab completion functionality
 ```
 
-Time to move on to the next stage!
+### Architecture Overview
 
-# Stage 2 & beyond
+The shell follows a clean pipeline architecture:
 
-Note: This section is for stages 2 and beyond.
+1. **Tokenizer** (`tokenizer.rs`): Converts input strings into tokens
+2. **Parser** (`parser.rs`): Transforms tokens into structured commands
+3. **Executor** (`executor.rs`): Executes parsed commands with proper I/O handling
+4. **Command** (`command.rs`): Implements built-in commands and external program execution
 
-1. Ensure you have `cargo (1.87)` installed locally
-1. Run `./your_program.sh` to run your program, which is implemented in
-   `src/main.rs`. This command compiles your Rust project, so it might be slow
-   the first time you run it. Subsequent runs will be fast.
-1. Commit your changes and run `git push origin master` to submit your solution
-   to CodeCrafters. Test output will be streamed to your terminal.
+## Usage Examples
+
+### Basic Commands
+```bash
+$ echo "Hello, World!"
+Hello, World!
+
+$ pwd
+/home/user/project
+
+$ cd /tmp
+$ pwd
+/tmp
+```
+
+### I/O Redirection
+```bash
+# Output redirection
+$ echo "Hello" > output.txt
+$ cat output.txt
+Hello
+
+# Append to file
+$ echo "World" >> output.txt
+$ cat output.txt
+Hello
+World
+
+# Error redirection
+$ ls nonexistent 2> error.log
+$ cat error.log
+ls: cannot access 'nonexistent': No such file or directory
+```
+
+### Pipeline Operations
+```bash
+# Basic pipeline
+$ ls -la | grep ".rs"
+-rw-r--r-- 1 user user  1234 Jan  5 10:00 main.rs
+-rw-r--r-- 1 user user   567 Jan  5 10:00 parser.rs
+
+# Complex pipeline with redirection
+$ cat file.txt | grep "pattern" > results.txt
+```
+
+### Background Execution
+```bash
+# Run command in background
+$ sleep 10 &
+$ echo "This runs immediately"
+This runs immediately
+```
+
+### Built-in Commands
+```bash
+# Check command type
+$ type echo
+echo is a shell builtin
+
+$ type ls
+ls is /bin/ls
+
+# Exit with code
+$ exit 0
+```
+
+## Getting Started
+
+### Prerequisites
+- Rust 1.80+ installed
+- Cargo package manager
+
+### Building and Running
+
+1. **Clone the repository**:
+   ```bash
+   git clone <repository-url>
+   cd codecrafters-shell
+   ```
+
+2. **Build the project**:
+   ```bash
+   cargo build --release
+   ```
+
+3. **Run the shell**:
+   ```bash
+   ./your_program.sh
+   # or directly with cargo
+   cargo run
+   ```
+
+4. **Interactive usage**:
+   ```bash
+   $ echo "Welcome to Rust Shell!"
+   Welcome to Rust Shell!
+   $ pwd
+   /current/directory
+   $ exit 0
+   ```
+
+## Implementation Details
+
+### Tokenization
+The tokenizer handles:
+- Word boundaries and whitespace
+- Quote parsing (single and double quotes)
+- Special characters (`|`, `&`, `>`, `<`, `>>`, `2>`, `2>>`)
+- Escape sequences with backslashes
+
+### Command Parsing
+The parser creates a structured representation:
+- Commands with arguments
+- I/O redirections
+- Pipeline chains
+- Execution modes (foreground/background)
+
+### Execution Engine
+The executor manages:
+- Built-in command dispatch
+- External program execution via PATH lookup
+- File descriptor management for I/O redirection
+- Process spawning and management
